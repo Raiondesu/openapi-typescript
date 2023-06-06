@@ -83,7 +83,7 @@ export default function createClient<Paths extends {}>(clientOptions: ClientOpti
     }
 
     // fetch!
-    const response = await fetch(finalURL, {
+    const originalResponse = await fetch(finalURL, {
       redirect: "follow",
       ...options,
       ...init,
@@ -91,8 +91,13 @@ export default function createClient<Paths extends {}>(clientOptions: ClientOpti
       body: typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody),
     });
 
+    const response = originalResponse.clone();
+
     // don’t parse JSON if status is 204, or Content-Length is '0'
-    const body = response.status === 204 || response.headers.get("Content-Length") === "0" ? {} : await response.json();
+    const body = originalResponse.status === 204 || originalResponse.headers.get("Content-Length") === "0"
+      ? {}
+      : await originalResponse.json();
+  
     return response.ok ? { data: body, response } : { error: body, response: response };
   }
 
